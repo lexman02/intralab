@@ -7,19 +7,18 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
-        Schema::create('apps', function (Blueprint $table) {
+        Schema::create('items', function (Blueprint $table) {
             $table->id();
-
             $table->string('name');
             $table->string('description')->nullable();
-            $table->string('url')->nullable();
+            $table->string('url');
             $table->string('icon')->nullable();
-            $table->foreignId('group_id')->nullable()->constrained();
+            $table->string('allowed_roles')->nullable();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('apps');
+        Schema::dropIfExists('items');
     }
 };
