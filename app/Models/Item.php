@@ -13,6 +13,4 @@ class Item extends Model
         'icon',
         'allowed_roles'
     ];
-
-    // TODO: Implement permissions by setting an allowed roles attribute
 }
