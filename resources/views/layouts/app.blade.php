@@ -27,12 +27,12 @@
         @else
             <x-sidebar/>
             <div class="flex-1 md:p-8 sm:px-0 space-y-5 sm:space-y-10 overflow-auto">
-{{--                <x-header/>--}}
                 {{ $slot }}
             </div>
         @endif
     </div>
 </div>
+@livewire('livewire-ui-modal')
 @livewireScripts
 </body>
 </html>
