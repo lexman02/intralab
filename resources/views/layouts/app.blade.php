@@ -19,15 +19,15 @@
         }
     </style>
 </head>
-<body class="bg-gray-800">
+<body>
 <div class="bg-gray-900 min-h-screen flex items-center justify-center">
     <div class="bg-gray-800 flex-1 flex flex-col space-y-5 lg:space-y-0 lg:flex-row md:p-2 h-screen">
         @if(Auth::hasRole('needs-sync') && !session()->has('success') && !session()->has('synced'))
             <livewire:sync-ldap/>
         @else
             <x-sidebar/>
-            <div class="flex-1 md:p-8 sm:px-0 space-y-10 overflow-auto">
-                <x-header/>
+            <div class="flex-1 md:p-8 sm:px-0 space-y-5 sm:space-y-10 overflow-auto">
+{{--                <x-header/>--}}
                 {{ $slot }}
             </div>
         @endif

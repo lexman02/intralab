@@ -1,4 +1,4 @@
-<div {{ $attributes->class(['flex justify-between items-center']) }}>
+<div class="flex justify-between items-center px-4 sm:px-0">
     <h3 class="text-3xl font-extralight text-white/50">Apps</h3>
     {{-- Grid/List Buttons --}}
     {{--<div class="inline-flex items-center space-x-2">
