@@ -1,5 +1,7 @@
+@props(['title' => request()->route()->getName()])
+
 <div class="flex justify-between items-center px-4 sm:px-0">
-    <h3 class="text-3xl font-extralight text-white/50">Apps</h3>
+    <h3 class="text-3xl font-extralight text-white/50">{{ Str::title($title) }}</h3>
     {{-- Grid/List Buttons --}}
     {{--<div class="inline-flex items-center space-x-2">
         <a class="bg-gray-900 text-white/50 p-2 rounded-md hover:text-white smooth-hover" href="#">
