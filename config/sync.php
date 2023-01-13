@@ -29,4 +29,6 @@ return [
     'sync_type' => env('LDAP_SYNC_TYPE', 'full'),
 
     'default_group' => env('LDAP_DEFAULT_GROUP', 'limited'),
+
+    'admin_role' => env('LDAP_ADMIN_ROLE', 'view-realm'),
 ];
