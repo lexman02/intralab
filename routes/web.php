@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Livewire\Dashboard;
+use App\Http\Livewire\Settings;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,8 +19,7 @@ use Illuminate\Support\Facades\Route;
 //    return view('welcome');
 //});
 
-Route::middleware('keycloak-web')->get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::middleware('keycloak-web')->get('/', Dashboard::class)->name('home');
+Route::middleware('keycloak-web')->get('/settings', Settings::class)->name('settings');
 
 //Route::middleware('keycloak-web')->get('/ldap', SyncLDAP::class);

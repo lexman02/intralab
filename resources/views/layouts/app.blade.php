@@ -22,6 +22,10 @@
         body {
             font-family: 'Nunito', sans-serif;
         }
+
+        [x-cloak] {
+            display: none;
+        }
     </style>
 </head>
 <body>
