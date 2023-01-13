@@ -38,16 +38,16 @@ class SyncLdap extends Component
         $ldap_user = User::find($user['dn']);
 
         if ($ldap_user) {
-            if (!$this->checkPosix($ldap_user))
-            {
-                if (config('sync.sync_type') == 'posix' || config('sync.sync_type') == 'full')
-                {
+            if (!$this->checkPosix($ldap_user)) {
+                if (config('sync.sync_type') == 'posix' || config('sync.sync_type') == 'full') {
 //                    $ldap_user->setAttribute('objectclass', array_merge($ldap_user->getAttribute('objectclass'), ['posixAccount', 'top']));
-                    $ldap_user->setAttribute('objectclass', array_merge($ldap_user->getAttribute('objectclass'), ['posixAccount']));
+                    $ldap_user->setAttribute('objectclass',
+                        array_merge($ldap_user->getAttribute('objectclass'), ['posixAccount']));
                     $ldap_user->setAttribute('uidnumber', $this->getUidNumber());
                     $ldap_user->setAttribute('gidnumber', 1000001);
-                    $ldap_user->setAttribute('displayname', $ldap_user->getFirstAttribute('cn') . ' ' . $ldap_user->getFirstAttribute('sn'));
-                    $ldap_user->setAttribute('homedirectory', '/home/' . $ldap_user->getFirstAttribute('displayname'));
+                    $ldap_user->setAttribute('displayname',
+                        $ldap_user->getFirstAttribute('cn').' '.$ldap_user->getFirstAttribute('sn'));
+                    $ldap_user->setAttribute('homedirectory', '/home/'.$ldap_user->getFirstAttribute('displayname'));
                     $ldap_user->setAttribute('loginshell', '/bin/sh');
 //                    TODO: figure out why memberof isnt saving
 //                    $ldap_user->setAttribute('memberof', 'cn=users,cn=groups,{base}');
@@ -66,10 +66,10 @@ class SyncLdap extends Component
                 } catch (LdapRecordException $e) {
                 }
 
-                session(['success' => $ldap_user->getFirstAttribute('displayname') . ' has been synced successfully!']);
+                session(['success' => $ldap_user->getFirstAttribute('displayname').' has been synced successfully!']);
                 return redirect('/');
             } else {
-                session(['synced' => $ldap_user->getFirstAttribute('displayname') . ' is already synced!']);
+                session(['synced' => $ldap_user->getFirstAttribute('displayname').' is already synced!']);
                 return redirect('/');
             }
         }
@@ -88,8 +88,7 @@ class SyncLdap extends Component
 
     public function getUidNumber()
     {
-        if (config('sync.synology'))
-        {
+        if (config('sync.synology')) {
             $uid = Entry::find('cn=curID,cn=synoconf,{base}');
             $uid->setAttribute('uidnumber', $uid->getFirstAttribute('uidnumber') + 1);
             try {
@@ -100,12 +99,13 @@ class SyncLdap extends Component
             }
             return $uid->getFirstAttribute('uidnumber') - 1;
         } else {
-            return User::where('uidnumber', '>=', 1000000)->orderBy('uidnumber', 'desc')->first()->getFirstAttribute('uidnumber') + 1;
+            return User::where('uidnumber', '>=', 1000000)->orderBy('uidnumber',
+                    'desc')->first()->getFirstAttribute('uidnumber') + 1;
         }
     }
 
     /**
-     * @param Collection|User|Model $ldap_user
+     * @param  Collection|User|Model  $ldap_user
      * @return void
      * @throws LdapRecordException
      * @throws ModelDoesNotExistException
@@ -141,7 +141,7 @@ class SyncLdap extends Component
     /**
      * Get the view / contents that represent the component.
      *
-     * @return View
+     * @return View|string
      */
     public function render()
     {
