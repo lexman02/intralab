@@ -3,14 +3,14 @@ import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
     server: {
-        hmr: {
-            host: 'intralab.test',
-        }
+        https: true,
+        host: 'intralab.test',
     },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true,
+            // refresh: true,
+            valetTls: 'intralab.test',
         }),
     ],
 });
