@@ -3,7 +3,7 @@
 <div class="flex justify-between items-center px-4 sm:px-0">
     <h3 class="text-3xl font-extralight text-white/50">{{ Str::title($title) }}</h3>
     {{-- Grid/List Buttons --}}
-    @if(request()->routeIs('home'))
+    @if(request()->routeIs('home') && Auth::hasRole(config('sync.admin_role'), 'master-realm'))
         <div class="inline-flex items-center space-x-2">
             {{--        <a class="bg-gray-900 text-white/50 p-2 rounded-md hover:text-white smooth-hover" href="#">--}}
             {{--            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"--}}
