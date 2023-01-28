@@ -3,9 +3,10 @@
 namespace App\Http\Livewire;
 
 use App\Models\Item;
-use Illuminate\View\View;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class Settings extends Component
 {
@@ -17,21 +18,6 @@ class Settings extends Component
 
     protected $listeners = ['confirm'];
 
-//    public function configType($uploadMethod)
-//    {
-//        if ($this->$uploadMethod === 'file') {
-//            $this->validate([
-//                'config' => 'required|file|mimes:json',
-//            ]);
-//        } elseif ($this->$uploadMethod === 'input') {
-//            $this->validate([
-//                'config' => 'required|json',
-//            ]);
-//        } else {
-//            session()->flash('error', 'Invalid upload method');
-//        }
-//    }
-
     public function confirm()
     {
         $this->confirmed = true;
@@ -39,24 +25,34 @@ class Settings extends Component
     }
 
 
-    public function export()
+    /**
+     * Prepare application data for export and download as JSON
+     * @return StreamedResponse
+     */
+    public function export(): StreamedResponse
     {
         $filename = 'intralab_config_'.date('Y-m-d').'.json';
         return response()->streamDownload(function () {
             $apps = Item::all()->toArray();
+            $config = [];
+
+            // Get config keys and values from sync config file
+            foreach (config('sync') as $key => $value) {
+                $config[$key] = $value;
+            }
+
             $data = [
-                'settings' => [
-                    'synology_ldap' => config('sync.synology'),
-                    'sync_type' => config('sync.sync_type'),
-                    'default_group' => config('sync.default_group'),
-                ],
+                'config' => $config,
                 'apps' => $apps,
             ];
             echo json_encode($data);
         }, $filename);
     }
 
-    public function updatedConfig()
+    /**
+     * Validate the inputs in real-time
+     */
+    public function updatedConfig(): void
     {
         $uploadMethod = $this->uploadMethod;
         if ($uploadMethod === 'file') {
@@ -72,25 +68,41 @@ class Settings extends Component
         }
     }
 
+    /**
+     * Import the config file or input
+     */
     public function import()
     {
         $data = $this->getData();
 
-        $data = $this->configImport($data);
+        if (session()->has('error')) {
+            return;
+        }
+
+        if (isset($data['config'])) {
+            $this->configImport($data['config']);
+        }
 
         if (isset($data['apps'])) {
             $this->appsImport($data['apps']);
         }
-        
-        return redirect('/')->with('success', 'Import successful');
+
+        if ($data === null) {
+            session()->flash('error', 'Invalid config file');
+        } else {
+            redirect('/')->with('success', 'Import successful');
+        }
     }
 
     /**
+     * Validate and sanitize the config import data and return it
      * @return mixed
      */
     public function getData(): mixed
     {
         $uploadMethod = $this->uploadMethod;
+        $data = null;
+
         if ($uploadMethod === 'file') {
             $this->validate([
                 'config' => 'required|file|mimes:json',
@@ -109,32 +121,22 @@ class Settings extends Component
     }
 
     /**
+     * Sets the sync config settings from the config import if they exist
      * @param  mixed  $data
-     * @return mixed
      */
-    public function configImport(mixed $data): mixed
+    public function configImport(mixed $data): void
     {
-        if (isset($data['config'])) {
-            $settings = $data['config'];
-            if (isset($settings['synology_ldap'])) {
-                config(['sync.synology' => $settings['synology_ldap']]);
-            }
-            if (isset($settings['sync_type'])) {
-                config(['sync.sync_type' => $settings['sync_type']]);
-            }
-            if (isset($settings['default_group'])) {
-                config(['sync.default_group' => $settings['default_group']]);
-            }
+        foreach ($data as $key => $value) {
+            config(['sync.'.$key => $value]);
         }
-        return $data;
     }
 
     /**
      * @param  mixed  $apps
      */
-    public function appsImport(mixed $data): void
+    public function appsImport(mixed $apps): void
     {
-        foreach ($data as $app) {
+        foreach ($apps as $app) {
             Item::updateOrCreate(['name' => $app['name']], $app);
         }
     }
@@ -142,9 +144,9 @@ class Settings extends Component
     /**
      * Get the view / contents that represent the component.
      *
-     * @return View|string
+     * @return View
      */
-    public function render()
+    public function render(): View
     {
         return view('livewire.settings');
     }

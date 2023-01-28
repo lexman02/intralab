@@ -113,7 +113,7 @@
                                   class="bg-gray-700/50 rounded-xl text-sm h-full w-full text-white/75 caret-white p-4 resize-none border-0 ring-1 ring-slate-900/10 focus:outline-none placeholder:font-medium placeholder:text-5xl placeholder:text-center"></textarea>
                         <button type="submit"
                                 @disabled($errors->isNotEmpty())
-                                class="w-1/3 p-3 rounded-xl bg-blue-900/50 mt-4 text-white hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2 disabled:bg-blue-900/30 disabled:text-white/50 disabled:cursor-not-allowed">
+                                class="w-1/3 p-3 rounded-xl bg-blue-900/50 mt-4 text-white hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2 disabled:bg-blue-900/30 disabled:text-white/50 disabled:cursor-not-allowed disabled:hidden">
                             Save
                         </button>
                     </form>
