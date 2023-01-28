@@ -35,7 +35,7 @@
             <livewire:sync-ldap/>
         @else
             <x-sidebar/>
-            <div class="flex-1 md:p-8 sm:px-0 space-y-5 sm:space-y-10 overflow-auto">
+            <div class="flex-1 px-0 md:px-8 lg:p-8 space-y-5 sm:space-y-10 overflow-auto">
                 {{ $slot }}
             </div>
         @endif

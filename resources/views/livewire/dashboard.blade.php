@@ -1,7 +1,7 @@
-<div class="sm:space-y-5">
+<div class="space-y-5 pb-5">
     <x-header title="Apps"/>
-    <div class="sm:mb-0 flex flex-wrap flex-col sm:flex-row sm:space-x-8 space-y-4 px-4 sm:space-y-0 sm:px-0">
-    {{--<div class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">--}}
+    {{--    <div class="sm:mb-0 flex flex-wrap flex-col sm:flex-row sm:space-x-8 space-y-4 px-4 sm:space-y-0 sm:px-0">--}}
+    <div class="grid gap-5 sm:gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 px-4">
         {{--        <div class="group bg-gray-900/30 py-20 px-4 flex flex-col space-y-2 items-center cursor-pointer rounded-md hover:bg-gray-900/40 hover:smooth-hover">--}}
         {{--            <a class="bg-gray-900/70 text-white/50 group-hover:text-white group-hover:smooth-hover flex w-20 h-20 rounded-full items-center justify-center" href="#">--}}
         {{--                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">--}}
@@ -18,7 +18,10 @@
         @forelse($items as $item)
             @if(isset($item->allowed_roles))
                 @if(Auth::hasRole($item->allowed_roles, 'master-realm'))
-                    <x-card :name="$item->name" :description="$item->description" :url="$item->url" :icon="$item->icon"/>
+                    <x-card :name="$item->name"
+                            :description="$item->description"
+                            :url="$item->url"
+                            :icon="$item->icon"/>
                 @elseif($loop->remaining < 1)
                     <div class="bg-gray-700/80 col-span-full text-white text-lg p-4 rounded-xl">
                         <span class="rounded-l-xl bg-gray-500/60 px-6 mr-4 py-4 -ml-4 -my-4 font-black text-2xl">!</span>
@@ -26,7 +29,10 @@
                     </div>
                 @endif
             @else
-                <x-card :name="$item->name" :description="$item->description" :url="$item->url" :icon="$item->icon"/>
+                <x-card :name="$item->name"
+                        :description="$item->description"
+                        :url="$item->url"
+                        :icon="$item->icon"/>
             @endif
         @empty
             <div class="bg-gray-700/80 col-span-full text-white text-lg p-4 rounded-md">
