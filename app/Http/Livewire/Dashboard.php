@@ -17,7 +17,7 @@ class Dashboard extends Component
     public function openEditModal($item)
     {
         $this->editMode = true;
-        $this->emit('openModal', 'edit-app-modal', ['position' => json_decode($item)->position]);
+        $this->emit('openModal', 'edit-app-modal', ['id' => $item['id']]);
     }
 
     /**

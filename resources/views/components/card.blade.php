@@ -1,6 +1,6 @@
 @props(['item', 'editMode'])
 @if($editMode)
-    <button wire:click="$emit('openEditModal', '{{ json_encode($item) }}')"
+    <button wire:click="$emit('openEditModal', {{ json_encode($item) }})"
 @else
     <a href="{{ $item->url }}"
        @endif
