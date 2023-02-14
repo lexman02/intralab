@@ -68,8 +68,8 @@ class EditAppModal extends ModalComponent
             'allowed_roles' => json_encode($this->allowed_roles),
         ]);
 
-//        $this->emit('refreshDashboard');
         $this->emit('closeModal');
+        $this->emit('refreshDashboard');
     }
 
     /**

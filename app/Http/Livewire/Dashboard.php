@@ -11,7 +11,7 @@ class Dashboard extends Component
 //    public Item $items;
     public $editMode = false;
 
-    public $listeners = ['openEditModal'];
+    public $listeners = ['openEditModal', 'refreshDashboard' => '$refresh'];
 
 
     public function openEditModal($item)

@@ -4,8 +4,6 @@ namespace App\Http\Livewire;
 
 use App\Models\Item;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\RedirectResponse;
-use Livewire\Redirector;
 use LivewireUI\Modal\ModalComponent;
 
 class AddAppModal extends ModalComponent
@@ -49,9 +47,9 @@ class AddAppModal extends ModalComponent
     /**
      * Add the new app to the database and refresh the dashboard
      *
-     * @return Redirector|RedirectResponse
+     * @return void
      */
-    public function addApp(): Redirector|RedirectResponse
+    public function addApp(): void
     {
         $this->validate();
 
@@ -63,7 +61,8 @@ class AddAppModal extends ModalComponent
             'allowed_roles' => json_encode($this->allowed_roles),
         ]);
 
-        return redirect()->route('home');
+        $this->emit('closeModal');
+        $this->emit('refreshDashboard');
     }
 
     /**
