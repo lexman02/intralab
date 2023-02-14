@@ -14,13 +14,14 @@ class AddAppModal extends ModalComponent
     public $description;
     public $url;
     public $icon;
-//    public $allowed_roles;
+    public $allowed_roles = [];
 
     protected $rules = [
         'name' => 'required|string',
         'description' => 'nullable|string',
         'url' => 'required|url',
         'icon' => 'nullable|string',
+        'allowed_roles' => 'nullable|array',
     ];
 
     /**
@@ -32,6 +33,17 @@ class AddAppModal extends ModalComponent
     public function updated($propertyName): void
     {
         $this->validateOnly($propertyName);
+    }
+
+    public function addRole(): void
+    {
+        $this->allowed_roles[] = [''];
+    }
+
+    public function removeRole(int $index): void
+    {
+        unset($this->allowed_roles[$index]);
+        $this->allowed_roles = array_values($this->allowed_roles);
     }
 
     /**
@@ -48,6 +60,7 @@ class AddAppModal extends ModalComponent
             'description' => $this->description,
             'url' => $this->url,
             'icon' => $this->icon,
+            'allowed_roles' => json_encode($this->allowed_roles),
         ]);
 
         return redirect()->route('home');

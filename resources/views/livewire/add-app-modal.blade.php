@@ -44,7 +44,7 @@
             <a href="https://github.com/walkxcode/dashboard-icons#icons"
                class="text-sm text-gray-600/70 hover:text-gray-400/50">A list of all icons can be found here</a>
         </div>
-        {{--        Insert Roles Options--}}
+        <x-allowed-roles-input :allowed_roles="$allowed_roles"/>
         <button type="submit"
                 class="w-1/3 p-2.5 rounded-lg bg-blue-900/50 mt-4 text-white/60 hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2 disabled:bg-blue-900/30 disabled:text-white/50 disabled:cursor-not-allowed disabled:hidden">
             Add App
