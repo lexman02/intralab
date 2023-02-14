@@ -2,21 +2,16 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\Group;
 use Auth;
 use Illuminate\View\View;
 use LdapRecord\LdapRecordException;
 use LdapRecord\Models\Model;
 use LdapRecord\Models\ModelDoesNotExistException;
 use LdapRecord\Models\OpenLDAP\Entry;
-use LdapRecord\Models\OpenLDAP\Group as BaseGroup;
 use LdapRecord\Models\OpenLDAP\User;
 use LdapRecord\Query\Collection;
 use Livewire\Component;
-
-class Group extends BaseGroup
-{
-    public static $objectClasses = ['top', 'apple-group', 'posixGroup'];
-}
 
 class SyncLdap extends Component
 {
@@ -55,15 +50,14 @@ class SyncLdap extends Component
                     try {
                         $ldap_user->save();
                     } catch (LdapRecordException $e) {
-//                        session()->flash('error', $e->getMessage());
-                        dd($e->getMessage());
+                        session()->flash('error', $e->getMessage());
                     }
                 }
 
                 try {
                     $this->updateGroup($ldap_user);
-                } catch (ModelDoesNotExistException $e) {
-                } catch (LdapRecordException $e) {
+                } catch (ModelDoesNotExistException|LdapRecordException $e) {
+                    session()->flash('error', $e->getMessage());
                 }
 
                 session(['success' => $ldap_user->getFirstAttribute('displayname').' has been synced successfully!']);
@@ -94,8 +88,7 @@ class SyncLdap extends Component
             try {
                 $uid->save();
             } catch (LdapRecordException $e) {
-//                session()->flash('error', $e->getMessage());
-                dd($e->getMessage());
+                session()->flash('error', $e->getMessage());
             }
             return $uid->getFirstAttribute('uidnumber') - 1;
         } else {
@@ -117,6 +110,7 @@ class SyncLdap extends Component
         $members = $old->getAttribute('member');
         $memberuids = $old->getAttribute('memberuid');
         $memberuid = $ldap_user->getFirstAttribute('uid');
+
 //        TODO: check if memberuid or member is empty
 //        TODO: check if memberuid or member is being used by LDAP/keycloak (config option)
         $old->updateAttribute('member', array_slice($members, 0, array_search($ldap_user->getDn(), $members)));
@@ -129,15 +123,6 @@ class SyncLdap extends Component
         $new->save();
     }
 
-    public function checkUserExists($dn)
-    {
-//        if(User::find($dn)->exists())
-//        {
-//            return User::find($dn);
-//        }
-//        return User::find($dn);
-    }
-
     /**
      * Get the view / contents that represent the component.
      *
@@ -147,6 +132,4 @@ class SyncLdap extends Component
     {
         return view('livewire.sync-ldap');
     }
-
-
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Auth;
 use BadMethodCallException;
+use Vizir\KeycloakWebGuard\Auth\Guard\KeycloakWebGuard;
 use Vizir\KeycloakWebGuard\Models\KeycloakUser;
 
 class User extends KeycloakUser
@@ -18,7 +19,7 @@ class User extends KeycloakUser
         'name',
         'email',
         'sub',
-        'ldap'
+        'ldap',
     ];
 
     /**
@@ -31,13 +32,13 @@ class User extends KeycloakUser
     /**
      * Constructor
      *
-     * @param array $profile Keycloak user info
+     * @param  array  $profile  Keycloak user info
      */
     public function __construct(array $profile)
     {
         foreach ($profile as $key => $value) {
             if (in_array($key, $this->fillable)) {
-                $this->attributes[ $key ] = $value;
+                $this->attributes[$key] = $value;
             }
         }
 
@@ -57,12 +58,12 @@ class User extends KeycloakUser
     /**
      * Magic method to get attributes
      *
-     * @param  string $name
+     * @param  string  $name
      * @return mixed
      */
     public function __get(string $name)
     {
-        return $this->attributes[ $name ] ?? null;
+        return $this->attributes[$name] ?? null;
     }
 
     /**
@@ -88,11 +89,11 @@ class User extends KeycloakUser
     /**
      * Check user has roles
      *
-     * @see KeycloakWebGuard::hasRole()
-     *
      * @param  string|array  $roles
      * @param  string  $resource
      * @return boolean
+     * @see KeycloakWebGuard::hasRole()
+     *
      */
     public function hasRole($roles, $resource = ''): bool
     {
@@ -124,7 +125,7 @@ class User extends KeycloakUser
     /**
      * Set the token value for the "remember me" session.
      *
-     * @param string $value
+     * @param  string  $value
      * @codeCoverageIgnore
      */
     public function setRememberToken($value)
