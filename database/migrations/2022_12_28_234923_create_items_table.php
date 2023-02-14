@@ -8,12 +8,12 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('items', function (Blueprint $table) {
-            $table->id('position');
+            $table->id();
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('url');
             $table->string('icon')->nullable();
-            $table->string('allowed_roles')->nullable();
+            $table->json('allowed_roles')->nullable();
         });
     }
 

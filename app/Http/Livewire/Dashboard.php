@@ -27,8 +27,12 @@ class Dashboard extends Component
      */
     public function render()
     {
+        $items = Item::all()->filter(function ($item) {
+            return auth()->user()->hasRole(json_decode($item->allowed_roles), 'master-realm');
+        });
+
         return view('livewire.dashboard', [
-            'items' => Item::all(),
+            'items' => $items,
         ]);
     }
 }
