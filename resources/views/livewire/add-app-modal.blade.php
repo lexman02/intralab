@@ -41,7 +41,7 @@
                    id="icon"
                    placeholder="ubuntu"
                    class="bg-gray-700/50 rounded-lg text-sm h-full w-full mt-1 text-white/75 caret-white p-2.5 resize-none border-0 ring-1 ring-slate-900/10 focus:outline-none placeholder:font-medium placeholder:text-white/20">
-            <a href="https://github.com/walkxcode/dashboard-icons#icons"
+            <a href="https://github.com/walkxcode/dashboard-icons/blob/main/ICONS.md"
                class="text-sm text-gray-600/70 hover:text-gray-400/50">A list of all icons can be found here</a>
         </div>
         <x-allowed-roles-input :allowed_roles="$allowed_roles"/>
