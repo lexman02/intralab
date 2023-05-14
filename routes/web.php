@@ -2,6 +2,7 @@
 
 use App\Http\Livewire\Dashboard;
 use App\Http\Livewire\Settings;
+use App\Http\Livewire\Ticketing;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,5 +22,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('keycloak-web')->get('/', Dashboard::class)->name('home');
 Route::middleware('keycloak-web')->get('/settings', Settings::class)->name('settings');
+Route::middleware('keycloak-web')->get('/ticketing', Ticketing::class)->name('ticketing');
 
 //Route::middleware('keycloak-web')->get('/ldap', SyncLDAP::class);
