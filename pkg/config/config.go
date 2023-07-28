@@ -25,3 +25,10 @@ func GetConfig() Config {
 func SetConfig(newConfig Config) {
 	config = newConfig
 }
+
+func ImportConfig(newConfig Config) {
+	config.Synology = newConfig.Synology
+	config.SyncType = newConfig.SyncType
+	config.DefaultGroup = newConfig.DefaultGroup
+	config.AdminRole = newConfig.AdminRole
+}
