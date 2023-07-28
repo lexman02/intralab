@@ -32,9 +32,27 @@
     let activeTicketingTab;
     let disabled;
     let input;
+    let confirmed = false;
 
-    function submitImport() {
-        console.log(input);
+    async function submitImport() {
+        await fetch("http://localhost:3000/api/config", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: input
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data);
+                if (data.status === "success") {
+                    console.log("success");
+                }
+            })
+    }
+
+    function exportConfig() {
+        this.setAttribute("href", "http://localhost:3000/api/config");
     }
 
     function parseJSON(value) {
@@ -84,7 +102,7 @@
     <Header title="Admin Settings"/>
 
     <div class="space-y-3 sm:space-y-6">
-        <div class="bg-gray-900/50 rounded-xl px-6 py-4 space-y-3 sm:space-y-6">
+        <div class="flex flex-col bg-gray-900/50 rounded-xl px-6 py-4 space-y-3 sm:space-y-4">
 <!--             x-data="{ confirmed: @entangle('confirmed') }">-->
             <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 justify-between items-center">
                 <div>
@@ -92,15 +110,29 @@
                     <span class="text-white/50">Backup your layout and settings to a JSON file to be imported.</span>
                 </div>
                 <div class="flex flex-col space-y-2.5 w-full sm:w-1/4 text-center">
-                    <button class="p-3 rounded-xl bg-blue-900/50 text-white hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2">
-<!--                            wire:click="export()"-->
+                    <a on:click={exportConfig}
+                       class="p-3 rounded-xl bg-blue-900/50 text-white hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2"
+                       href="#">
                         Export
-                    </button>
-                    <button class="p-3 rounded-xl bg-blue-900/50 text-white hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2">
-<!--                            wire:click="$emit('openModal', 'import-modal')"-->
+                    </a>
+                    <button on:click={() => confirmed = !confirmed}
+                            class="p-3 rounded-xl bg-blue-900/50 text-white hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2">
                         Import
                     </button>
                 </div>
+            </div>
+            {#if confirmed}
+            <div class="self-center p-2 max-w-fit bg-red-900 items-center mb-4 text-indigo-100 leading-none rounded-full flex lg:inline-flex"
+                 role="alert">
+                <span class="flex rounded-full bg-red-600/60 uppercase px-1 sm:px-2 py-1 text-xs text-white/80 font-bold mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                         class="w-5 h-5">
+                        <path fill-rule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                              clip-rule="evenodd"/>
+                    </svg>
+                </span>
+                <span class="font-semibold mr-2 text-white/80 text-left flex-auto">Are you sure? This will overwrite your current app settings and can't be undone!</span>
             </div>
             <Tabs items={importTabs} bind:activeTabValue={activeImportTab}>
                 {#if activeImportTab === 1}
@@ -148,22 +180,6 @@
                               id="input">
                             <label for="input-textbox"
                                    class="text-white/70 self-start sr-only">Paste your config here</label>
-<!--                            @error('config')-->
-<!--                            <div-->
-<!--                                    class="self-center p-2 max-w-fit bg-red-900 items-center mb-4 text-indigo-100 leading-none rounded-full flex lg:inline-flex"-->
-<!--                                    role="alert">-->
-<!--                                            <span-->
-<!--                                                    class="flex rounded-full bg-red-600/60 uppercase px-1 sm:px-2 py-1 text-xs text-white/80 font-bold mr-3">-->
-<!--                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"-->
-<!--                                                     class="w-5 h-5">-->
-<!--                                                    <path fill-rule="evenodd"-->
-<!--                                                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"-->
-<!--                                                          clip-rule="evenodd"/>-->
-<!--                                                </svg>-->
-<!--                                            </span>-->
-<!--                                <span class="font-semibold mr-1 text-white/80 text-left flex-auto">{{ $message }}</span>-->
-<!--                            </div>-->
-<!--                            @enderror-->
                             <textarea data-gramm="false"
                                       autocomplete="off"
                                       autocorrect="off"
@@ -183,6 +199,7 @@
                     </div>
                 {/if}
             </Tabs>
+            {/if}
         </div>
 
         <hr class="w-1/4 mx-auto border-white/30 border rounded-3xl">
