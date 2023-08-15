@@ -2,7 +2,8 @@
     export let item;
 </script>
 
-<a id="{item.id}" class="relative bg-gray-700/80 py-3 md:py-4 sm:py-20 w-full h-36 flex flex-col items-center cursor-pointer rounded-md hover:bg-gray-700/40 hover:smooth-hover"
+<a id="{item.id}"
+   class="relative bg-gray-700/80 py-3 md:py-4 sm:py-20 w-full h-auto flex flex-col items-center cursor-pointer rounded-md hover:bg-gray-700/40 hover:smooth-hover"
    href="#">
     <!--{{&#45;&#45;    <span class="flex absolute top-0 right-0 -mt-1 -mr-1">&#45;&#45;}}-->
     <!--{{&#45;&#45;        Icon Only&#45;&#45;}}-->
@@ -15,6 +16,6 @@
          alt="{item.icon ? item.icon : 'ubuntu' + '_icon'}"/>
     <div class="flex flex-col h-full w-full items-center justify-center">
         <h4 class="text-white text-xl font-semibold text-center">{ item.name }</h4>
-        <span class="text-white/50 text-sm">{ item.description }</span>
+        <span class="text-white/50 text-sm text-center">{ item.description }</span>
     </div>
 </a>
