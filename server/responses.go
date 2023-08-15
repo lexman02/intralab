@@ -19,6 +19,7 @@ type Error struct {
 func jsonError(w http.ResponseWriter, code int, message Error) {
 	jsonResponse(w, code, map[string]Error{"error": message})
 	log.Println(message.Error)
+	return
 }
 
 func jsonResponse(w http.ResponseWriter, code int, payload interface{}) {
@@ -30,4 +31,5 @@ func jsonResponse(w http.ResponseWriter, code int, payload interface{}) {
 	if err != nil {
 		log.Println(write)
 	}
+	return
 }
