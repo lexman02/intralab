@@ -3,6 +3,7 @@
     import Tabs from "../components/Tabs.svelte";
     import {parseJSON} from "../utils.ts";
     import config from "../../../config.json";
+    import Modal from "../components/Modal.svelte";
 
     const importTabs = [
         {
@@ -31,6 +32,7 @@
 
     let activeImportTab;
     let activeTicketingTab = setActiveTicketingTab();
+    let showConfirmation = false;
     let disabled;
     let input;
     let confirmed = false;
@@ -65,6 +67,15 @@
 
     function exportConfig() {
         this.setAttribute("href", "http://localhost:3000/api/config");
+    }
+
+    function toggleConfirmation() {
+        showConfirmation = !showConfirmation;
+    }
+
+    function confirm(value) {
+        confirmed = value;
+        toggleConfirmation();
     }
 
     const validateFields = (event) => {
@@ -115,8 +126,9 @@
                        href="#">
                         Export
                     </a>
-                    <button on:click={() => confirmed = !confirmed}
-                            class="p-3 rounded-xl bg-blue-900/50 text-white hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2">
+                    <button on:click={toggleConfirmation}
+                            disabled={confirmed}
+                            class="p-3 rounded-xl bg-blue-900/50 text-white hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2 disabled:bg-blue-900/30 disabled:text-white/50 disabled:cursor-not-allowed">
                         Import
                     </button>
                 </div>
@@ -262,4 +274,30 @@
             {/if}
         </div>
     </div>
+
+    <Modal bind:showModal={showConfirmation}>
+        <div class="p-10 text-center space-y-6">
+            <!--                                    <span class="text-7xl">&#x26A0;</span>-->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                 class="w-1/4 h-1/4 md:w-1/5 md:h-1/5 mx-auto text-amber-600">
+                <path fill-rule="evenodd"
+                      d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                      clip-rule="evenodd"/>
+            </svg>
+            <div>
+                <h4 class="text-4xl text-white">Are you sure</h4>
+                <p class="text-white/50">This will overwrite your current app settings and can't be undone!</p>
+            </div>
+            <div class="flex flex-row justify-center space-x-4">
+                <button on:click={() => confirm(true)}
+                        class="w-1/2 p-3 rounded-xl bg-red-800/50 text-white hover:smooth-hover hover:bg-red-900/70 focus:outline-none focus:ring-2 focus:ring-red-500/50">
+                    Import
+                </button>
+                <button on:click={() => confirm(false)}
+                        class="w-1/2 p-3 rounded-xl bg-blue-900/50 text-white hover:smooth-hover hover:bg-blue-900/70 focus:outline-none focus:ring-2">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </Modal>
 </div>
