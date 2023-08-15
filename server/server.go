@@ -5,6 +5,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
+	"intralab/types"
 	"log"
 	"net/http"
 	"time"
@@ -13,7 +14,11 @@ import (
 	"intralab/pkg/items"
 )
 
-func StartServer() {
+var cfg *config.Config
+
+func StartServer(config *config.Config) {
+	cfg = config
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -43,26 +48,28 @@ func StartServer() {
 }
 
 func GetItemsHandler(w http.ResponseWriter, r *http.Request) {
-	itemList := items.GetItems()
+	itemList, dbErr := items.GetItems()
+	if dbErr != nil {
+		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(itemList)
 	if err != nil {
-		http.Error(w, "Failed to encode items", http.StatusInternalServerError)
-		return
+		jsonError(w, http.StatusInternalServerError, Error{EncodeError, err.Error()})
 	}
 }
 
 func ExportConfigHandler(w http.ResponseWriter, r *http.Request) {
-	var intralab struct {
-		config.Config `json:"config"`
-		Items         []items.Item `json:"items"`
+	getItems, dbErr := items.GetItems()
+	if dbErr != nil {
+		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
 	}
 
-	intralab.Config = config.GetConfig()
-	intralab.Items = items.GetItems()
-
-	data, err := json.Marshal(intralab)
+	data, err := json.Marshal(types.Intralab{
+		Config: *cfg,
+		Items:  getItems,
+	})
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, Error{EncodeError, err.Error()})
 	}
@@ -79,18 +86,19 @@ func ExportConfigHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ImportConfigHandler(w http.ResponseWriter, r *http.Request) {
-	var intralab struct {
-		config.Config `json:"config"`
-		Items         []items.Item `json:"items"`
-	}
+	var intralab types.Intralab
 
 	err := json.NewDecoder(r.Body).Decode(&intralab)
 	if err != nil {
 		jsonError(w, http.StatusUnprocessableEntity, Error{DecodeError, err.Error()})
 	}
 
-	config.SetConfig(intralab.Config)
-	items.SetItems(intralab.Items)
+	config.ImportConfig(intralab.Config)
+
+	dbErr := items.StoreItems(intralab.Items)
+	if dbErr != nil {
+		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
+	}
 
 	log.Println("New config imported")
 	jsonResponse(w, http.StatusOK, map[string]string{"success": "Import successful"})
