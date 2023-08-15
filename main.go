@@ -1,38 +1,46 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
+	"github.com/spf13/viper"
+	"intralab/db"
 	"intralab/pkg/config"
-	"intralab/pkg/items"
 	"intralab/server"
 	"log"
-	"os"
 )
 
-type Intralab struct {
-	config.Config `json:"config"`
-	Items         []items.Item `json:"items"`
-}
-
 func main() {
-	ParseIntralab()
+	dbErr := db.Init("intralab.db")
+	if dbErr != nil {
+		log.Fatal("Failed to initialize database: ", dbErr)
+	}
+	defer db.DB.Close() // Close the database when the program exits
+
+	cfg, cfgErr := config.LoadConfig("config.json")
+	if cfgErr != nil {
+		log.Fatal("Failed to load config: ", cfgErr)
+	}
+	viper.WatchConfig()
+
+	fmt.Println(cfg)
+
 	// Rebuild frontend (if needed?)
-	server.StartServer()
+	server.StartServer(cfg)
 }
 
-func ParseIntralab() {
-	var intralab Intralab
-
-	data, err := os.ReadFile("intralab.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = json.Unmarshal(data, &intralab)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	config.SetConfig(intralab.Config)
-	items.SetItems(intralab.Items)
-}
+//func ParseIntralab() {
+//	var intralab Intralab
+//
+//	data, err := os.ReadFile("intralab.json")
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	err = json.Unmarshal(data, &intralab)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	config.SetConfig(intralab.Config)
+//	items.SetItems(intralab.Items)
+//}
