@@ -37,6 +37,9 @@ func StartServer(config *config.Config) {
 	// Register routes
 	//r.Get("/", frontend.HomeHandler)
 	r.Get("/api/items", GetItemsHandler)
+	r.Post("/api/items", PostItemsHandler)
+	r.Delete("/api/items", DeleteItemsHandler)
+	r.Put("/api/items", UpdateItemsHandler)
 	r.Get("/api/config", ExportConfigHandler)
 	r.Post("/api/config", ImportConfigHandler)
 
@@ -51,19 +54,79 @@ func GetItemsHandler(w http.ResponseWriter, r *http.Request) {
 	itemList, dbErr := items.GetItems()
 	if dbErr != nil {
 		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(itemList)
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, Error{EncodeError, err.Error()})
+		return
 	}
+}
+
+func PostItemsHandler(w http.ResponseWriter, r *http.Request) {
+	var itemList []items.Item
+
+	err := json.NewDecoder(r.Body).Decode(&itemList)
+	if err != nil {
+		jsonError(w, http.StatusUnprocessableEntity, Error{DecodeError, err.Error()})
+		return
+	}
+
+	dbErr := items.StoreItems(itemList)
+	if dbErr != nil {
+		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
+		return
+	}
+
+	log.Println("Items added")
+	jsonResponse(w, http.StatusOK, map[string]string{"success": "Items added"})
+}
+
+func UpdateItemsHandler(w http.ResponseWriter, r *http.Request) {
+	var item items.Item
+
+	err := json.NewDecoder(r.Body).Decode(&item)
+	if err != nil {
+		jsonError(w, http.StatusUnprocessableEntity, Error{DecodeError, err.Error()})
+		return
+	}
+
+	dbErr := items.UpdateItems(item)
+	if dbErr != nil {
+		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
+		return
+	}
+
+	log.Println("Items updated")
+	jsonResponse(w, http.StatusOK, map[string]string{"success": "Items updated"})
+}
+
+func DeleteItemsHandler(w http.ResponseWriter, r *http.Request) {
+	var item items.Item
+
+	err := json.NewDecoder(r.Body).Decode(&item)
+	if err != nil {
+		jsonError(w, http.StatusUnprocessableEntity, Error{DecodeError, err.Error()})
+		return
+	}
+
+	dbErr := items.DeleteItems(item)
+	if dbErr != nil {
+		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
+		return
+	}
+
+	log.Println("Items deleted")
+	jsonResponse(w, http.StatusOK, map[string]string{"success": "Items deleted"})
 }
 
 func ExportConfigHandler(w http.ResponseWriter, r *http.Request) {
 	getItems, dbErr := items.GetItems()
 	if dbErr != nil {
 		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
+		return
 	}
 
 	data, err := json.Marshal(types.Intralab{
@@ -72,6 +135,7 @@ func ExportConfigHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, Error{EncodeError, err.Error()})
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -81,6 +145,7 @@ func ExportConfigHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(data)
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, Error{GeneralError, err.Error()})
+		return
 	}
 	log.Println("Config exported")
 }
@@ -91,13 +156,19 @@ func ImportConfigHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&intralab)
 	if err != nil {
 		jsonError(w, http.StatusUnprocessableEntity, Error{DecodeError, err.Error()})
+		return
 	}
 
 	config.ImportConfig(intralab.Config)
+	purgeErr := items.PurgeItems()
+	if purgeErr != nil {
+		return
+	}
 
 	dbErr := items.StoreItems(intralab.Items)
 	if dbErr != nil {
 		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
+		return
 	}
 
 	log.Println("New config imported")
