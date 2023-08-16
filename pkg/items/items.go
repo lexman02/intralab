@@ -7,12 +7,12 @@ import (
 )
 
 type Item struct {
-	Name         string  `json:"name"`
-	Position     int     `json:"position"`
-	Description  *string `json:"description"`
-	URL          string  `json:"url"`
-	Icon         string  `json:"icon"`
-	AllowedRoles string  `json:"allowed_roles"`
+	Name         string   `json:"name"`
+	Position     int      `json:"position"`
+	Description  *string  `json:"description"`
+	URL          string   `json:"url"`
+	Icon         *string  `json:"icon"`
+	AllowedRoles []string `json:"allowed_roles"`
 }
 
 //var itemList []Item
@@ -66,6 +66,73 @@ func StoreItems(items []Item) error {
 			}
 		}
 		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateItems(item Item) error {
+	err := db.DB.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("items"))
+		if err != nil {
+			return err
+		}
+
+		// Encode item to JSON or other format
+		itemJSON, err := json.Marshal(item)
+		if err != nil {
+			return err
+		}
+
+		err = b.Put([]byte(item.Name), itemJSON)
+		if err != nil {
+			return err
+		}
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteItems(item Item) error {
+	err := db.DB.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("items"))
+		if err != nil {
+			return err
+		}
+
+		err = b.Delete([]byte(item.Name))
+		if err != nil {
+			return err
+		}
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func PurgeItems() error {
+	err := db.DB.Update(func(tx *bolt.Tx) error {
+		err := tx.DeleteBucket([]byte("items"))
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.CreateBucket([]byte("items"))
+		if err != nil {
+			return err
+		}
+
+		return nil
 	})
 	if err != nil {
 		return err
