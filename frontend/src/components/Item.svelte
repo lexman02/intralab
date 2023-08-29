@@ -28,7 +28,7 @@
             return;
         }
 
-        await fetch('http://localhost:3000/api/items', {
+        await fetch('/api/items', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

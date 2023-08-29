@@ -49,7 +49,7 @@
     }
 
     async function submitImport() {
-        await fetch("http://localhost:3000/api/config", {
+        await fetch("/api/config", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -66,7 +66,7 @@
     }
 
     function exportConfig() {
-        this.setAttribute("href", "http://localhost:3000/api/config");
+        this.setAttribute("href", "/api/config");
     }
 
     function toggleConfirmation() {

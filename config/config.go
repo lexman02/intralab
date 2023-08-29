@@ -6,9 +6,21 @@ import (
 
 type AppConfig struct {
 	Name  string `mapstructure:"name"`
+	Env   string `mapstructure:"env"`
+	Key   string `mapstructure:"key"`
 	URL   string `mapstructure:"url"`
 	Port  int    `mapstructure:"port"`
 	Debug bool   `mapstructure:"debug"`
+}
+
+type AuthConfig struct {
+	Enabled      bool     `mapstructure:"enabled"`
+	AuthURL      string   `mapstructure:"auth_url"`
+	ClientID     string   `mapstructure:"client_id"`
+	ClientSecret string   `mapstructure:"client_secret"`
+	RedirectURL  string   `mapstructure:"redirect_url"`
+	Scopes       []string `mapstructure:"scopes"`
+	AdminRole    string   `mapstructure:"admin_role"`
 }
 
 type LDAPConfig struct {
@@ -41,6 +53,7 @@ type TicketingConfig struct {
 
 type Config struct {
 	App       AppConfig       `mapstructure:"app"`
+	Auth      AuthConfig      `mapstructure:"auth"`
 	LDAPSync  LDAPSyncConfig  `mapstructure:"ldap_sync"`
 	Ticketing TicketingConfig `mapstructure:"ticketing"`
 }
@@ -68,6 +81,14 @@ func ImportConfig(newConfig Config) {
 	viper.Set("app", newConfig.App)
 	viper.Set("ldap_sync", newConfig.LDAPSync)
 	viper.Set("ticketing", newConfig.Ticketing)
+	err := viper.WriteConfig()
+	if err != nil {
+		return
+	}
+}
+
+func SetConfig(key string, value interface{}) {
+	viper.Set(key, value)
 	err := viper.WriteConfig()
 	if err != nil {
 		return

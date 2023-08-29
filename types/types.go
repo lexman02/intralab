@@ -1,7 +1,7 @@
 package types
 
 import (
-	"intralab/pkg/config"
+	"intralab/config"
 	"intralab/pkg/items"
 )
 
