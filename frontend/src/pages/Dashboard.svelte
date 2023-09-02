@@ -1,8 +1,9 @@
-<script>
+<script lang="ts">
     import Header from "../components/Header.svelte";
     import Item from "../components/Item.svelte";
-    import {blur} from "svelte/transition";
+    import { blur } from "svelte/transition";
     import AddModal from "../components/AddModal.svelte";
+    import IsAdmin from "../components/auth/IsAdmin.svelte";
 
     let items;
     let itemCount = 0;
@@ -58,37 +59,38 @@
 <div class="space-y-5 pb-5">
     <Header title="Apps">
         <!--    Grid/List Buttons-->
-        <!--            Check if user has permissions (OIDC)-->
-        <div class="inline-flex items-center space-x-2">
-            <!--{{--            <a class="bg-gray-900 text-white/50 p-2 rounded-md hover:text-white smooth-hover" href="#">--}}-->
-            <!--{{--                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"--}}-->
-            <!--{{--                     stroke="currentColor">--}}-->
-            <!--{{--                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"--}}-->
-            <!--{{--                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>--}}-->
-            <!--{{--                </svg>--}}-->
-            <!--{{--            </a>--}}-->
-            <button on:click={toggleAddModal}
-                    class="bg-gray-900 text-white/50 p-2 rounded-md hover:text-white smooth-hover"
-                    class:empty={'animate-bounce'}>
-                <!--           wire:click="$emit('openModal', 'add-app-modal')"-->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6">
-                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"/>
-                </svg>
-            </button>
-
-            {#if items}
-                <button on:click={toggleEditMode}
+        <IsAdmin>
+            <div class="inline-flex items-center space-x-2">
+                <!--{{--            <a class="bg-gray-900 text-white/50 p-2 rounded-md hover:text-white smooth-hover" href="#">--}}-->
+                <!--{{--                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"--}}-->
+                <!--{{--                     stroke="currentColor">--}}-->
+                <!--{{--                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"--}}-->
+                <!--{{--                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>--}}-->
+                <!--{{--                </svg>--}}-->
+                <!--{{--            </a>--}}-->
+                <button on:click={toggleAddModal}
                         class="bg-gray-900 text-white/50 p-2 rounded-md hover:text-white smooth-hover"
-                        class:editMode={'bg-gray-900/40 text-white/25'}>
-                    <!--                @click="edit = !edit"-->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                        <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z"/>
+                        class:empty={'animate-bounce'}>
+                    <!--           wire:click="$emit('openModal', 'add-app-modal')"-->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6">
+                        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"/>
                     </svg>
                 </button>
-            {/if}
-        </div>
 
+                {#if items}
+                    <button on:click={toggleEditMode}
+                            class="bg-gray-900 text-white/50 p-2 rounded-md hover:text-white smooth-hover"
+                            class:editMode={'bg-gray-900/40 text-white/25'}>
+                        <!--                @click="edit = !edit"-->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z"/>
+                        </svg>
+                    </button>
+                {/if}
+            </div>
+        </IsAdmin>
     </Header>
+
     {#if editMode}
         <div transition:blur={{ amount: 20, duration: 350 }}
              class="w-full bg-gray-700/40 rounded-lg p-4 text-center flex flex-col border-dashed border-4 border-gray-600">

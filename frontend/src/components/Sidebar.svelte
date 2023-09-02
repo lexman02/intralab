@@ -1,5 +1,7 @@
-<script>
-    import {Link} from "svelte-routing";
+<script lang="ts">
+    import { authState } from "../stores/auth";
+    import { Link } from "svelte-routing";
+    import Logout from "./auth/Logout.svelte";
 
     function getProps(href) {
         const baseStyle = 'hover:bg-gray-800 hover:text-white smooth-hover p-4 inline-flex justify-center rounded-md'
@@ -49,25 +51,30 @@
         <!--{{&#45;&#45;        </a>&#45;&#45;}}-->
     </div>
     <div class="flex items-center flex-row space-x-2 lg:space-x-0 lg:flex-col lg:space-y-2">
-        <Link to="/settings" {getProps}>
-            <svg xmlns="http://www.w3.org/2000/svg"
-                 class="h-5 w-5 sm:h-6 sm:w-6"
-                 viewBox="0 0 20 20"
-                 fill="currentColor">
-                <path fill-rule="evenodd"
-                      d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
-                      clip-rule="evenodd"/>
-            </svg>
-        </Link>
-        <Link to="#" {getProps}>
-            <svg xmlns="http://www.w3.org/2000/svg"
-                 class="h-5 w-5 sm:h-6 sm:w-6"
-                 viewBox="0 0 20 20"
-                 fill="currentColor">
-                <path fill-rule="evenodd"
-                      d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"
-                      clip-rule="evenodd"/>
-            </svg>
-        </Link>
+        {#if $authState && $authState.authenticated}
+            <Link to="/settings" {getProps}>
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-5 w-5 sm:h-6 sm:w-6"
+                     viewBox="0 0 20 20"
+                     fill="currentColor">
+                    <path fill-rule="evenodd"
+                          d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                          clip-rule="evenodd"/>
+                </svg>
+            </Link>
+            <Logout/>
+        {:else}
+            <a href="/auth/login"
+               class="text-white/50 hover:bg-gray-800 hover:text-white smooth-hover p-4 inline-flex justify-center rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="w-5 h-5 sm:h-6 sm:w-6"
+                     viewBox="0 0 20 20"
+                     fill="currentColor">
+                    <path fill-rule="evenodd"
+                          d="M8 7a5 5 0 113.61 4.804l-1.903 1.903A1 1 0 019 14H8v1a1 1 0 01-1 1H6v1a1 1 0 01-1 1H3a1 1 0 01-1-1v-2a1 1 0 01.293-.707L8.196 8.39A5.002 5.002 0 018 7zm5-3a.75.75 0 000 1.5A1.5 1.5 0 0114.5 7 .75.75 0 0016 7a3 3 0 00-3-3z"
+                          clip-rule="evenodd"/>
+                </svg>
+            </a>
+        {/if}
     </div>
 </nav>

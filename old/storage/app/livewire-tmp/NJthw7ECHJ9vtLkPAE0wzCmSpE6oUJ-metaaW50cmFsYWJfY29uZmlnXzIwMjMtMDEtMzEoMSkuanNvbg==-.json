@@ -1,0 +1,1 @@
+{"config":{"synology":true,"sync_type":"full","default_group":"limited","admin_role":"view-realm"},"apps":[{"id":8,"name":"Book","description":"book","url":"https:\/\/intralab.test","icon":"bookstack","allowed_roles":null}]}

@@ -22,7 +22,7 @@
             return;
         }
 
-        await fetch('http://localhost:3000/api/items', {
+        await fetch('/api/items', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
