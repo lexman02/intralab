@@ -13,14 +13,23 @@ type AppConfig struct {
 	Debug bool   `mapstructure:"debug"`
 }
 
-type AuthConfig struct {
-	Enabled      bool     `mapstructure:"enabled"`
+type OIDCConfig struct {
 	AuthURL      string   `mapstructure:"auth_url"`
 	ClientID     string   `mapstructure:"client_id"`
 	ClientSecret string   `mapstructure:"client_secret"`
 	RedirectURL  string   `mapstructure:"redirect_url"`
 	Scopes       []string `mapstructure:"scopes"`
-	AdminRole    string   `mapstructure:"admin_role"`
+}
+
+type BasicAuthConfig struct {
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+}
+
+type AuthConfig struct {
+	BasicAuth BasicAuthConfig `mapstructure:"basic_auth"`
+	OIDC      OIDCConfig      `mapstructure:"oidc"`
+	AdminRole string          `mapstructure:"admin_role"`
 }
 
 type LDAPConfig struct {
@@ -87,7 +96,7 @@ func ImportConfig(newConfig Config) {
 	}
 }
 
-func SetConfig(key string, value interface{}) {
+func (*Config) SetConfig(key string, value interface{}) {
 	viper.Set(key, value)
 	err := viper.WriteConfig()
 	if err != nil {

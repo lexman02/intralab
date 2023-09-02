@@ -24,7 +24,7 @@ type UserClaims struct {
 }
 
 func InitOIDCClient(cfg config.AuthConfig) {
-	provider, err := oidc.NewProvider(context.Background(), cfg.AuthURL)
+	provider, err := oidc.NewProvider(context.Background(), cfg.OIDC.AuthURL)
 	if err != nil {
 		panic(err)
 	}
@@ -32,10 +32,10 @@ func InitOIDCClient(cfg config.AuthConfig) {
 	oidcProvider = provider
 
 	oauth2Config = oauth2.Config{
-		ClientID:     cfg.ClientID,
-		ClientSecret: cfg.ClientSecret,
+		ClientID:     cfg.OIDC.ClientID,
+		ClientSecret: cfg.OIDC.ClientSecret,
 		Endpoint:     provider.Endpoint(),
-		RedirectURL:  cfg.RedirectURL,
+		RedirectURL:  cfg.OIDC.RedirectURL,
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email", "offline_access"},
 	}
 }
@@ -74,9 +74,6 @@ func VerifyOIDCToken(r *http.Request) (*oidc.IDToken, *oauth2.Token, error) {
 
 func CheckStateAndExpireCookie(w http.ResponseWriter, r *http.Request) error {
 	state, err := r.Cookie("p_state")
-
-	expireCookie("p_state", w)
-
 	if err != nil {
 		return errors.New("state cookie not set")
 	}
@@ -85,6 +82,7 @@ func CheckStateAndExpireCookie(w http.ResponseWriter, r *http.Request) error {
 		return errors.New("invalid state")
 	}
 
+	expireCookie("p_state", w)
 	return nil
 }
 
@@ -141,7 +139,6 @@ func GetUserClaimsFromAccessToken(token *oauth2.Token) (*UserClaims, error) {
 	//	return nil, errors.New("unexpected type for roles claim")
 	//}
 
-	//return roles, nil
 	return userClaims, nil
 }
 
@@ -156,16 +153,24 @@ func HasRequiredRoles(roles []string, allowedRoles []string) bool {
 	return false
 }
 
+func IsAdmin(roles []string, adminRole string) bool {
+	for _, role := range roles {
+		if role == adminRole {
+			return true
+		}
+	}
+	return false
+}
+
 func GetAuthURL(state string) string {
 	return oauth2Config.AuthCodeURL(state)
 }
 
 func LogoutURL(url string) string {
 	return url + "/protocol/openid-connect/logout"
-	//https: //auth.mcneillfam.co/realms/master/protocol/openid-connect/logout
 }
 
-func expireCookie(name string, resp http.ResponseWriter) {
+func expireCookie(name string, w http.ResponseWriter) {
 	cookie := &http.Cookie{
 		Name:     "p_state",
 		Value:    "",
@@ -173,5 +178,5 @@ func expireCookie(name string, resp http.ResponseWriter) {
 		HttpOnly: true,
 	}
 
-	http.SetCookie(resp, cookie)
+	http.SetCookie(w, cookie)
 }

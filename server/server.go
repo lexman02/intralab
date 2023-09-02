@@ -22,9 +22,10 @@ import (
 
 var cfg *config.Config
 var store *sessions.CookieStore
+var authType string
 
-func StartServer(config1 *config.Config) {
-	cfg = config1
+func StartServer(config *config.Config) {
+	cfg = config
 
 	sessionSecret, err := generateRandomSecret()
 	if err != nil {
@@ -33,7 +34,16 @@ func StartServer(config1 *config.Config) {
 
 	if cfg.App.Key == "" {
 		cfg.App.Key = sessionSecret
-		config.SetConfig("app.key", sessionSecret)
+		cfg.SetConfig("app.key", sessionSecret)
+	}
+
+	// Check if the middleware should use oidc or basic auth
+	if cfg.Auth.OIDC.ClientID == "" && cfg.Auth.OIDC.ClientSecret == "" {
+		log.Println("Using basic auth")
+		authType = "basic"
+	} else {
+		log.Println("Using OIDC")
+		authType = "oidc"
 	}
 
 	// Create a new CookieStore with the generated secret
@@ -41,7 +51,7 @@ func StartServer(config1 *config.Config) {
 
 	r := chi.NewRouter()
 
-	r.Use(OIDCMiddleware)
+	r.Use(AuthMiddleware)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
@@ -66,6 +76,7 @@ func StartServer(config1 *config.Config) {
 	r.Get("/api/config", ExportConfigHandler)
 	r.Post("/api/config", ImportConfigHandler)
 	r.Get("/auth/callback", CallbackHandler)
+	r.Get("/auth/info", GetAuthInfoHandler)
 	r.Get("/auth/logout", LogoutHandler)
 	//r.Post("/auth/validate", LoginHandler)
 
@@ -83,7 +94,7 @@ func GetItemsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if cfg.Auth.Enabled {
+	if authType == "oidc" {
 		session, err := store.Get(r, "session")
 		if err != nil {
 			http.Error(w, "Session error", http.StatusInternalServerError)
@@ -96,16 +107,18 @@ func GetItemsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var filteredItems []items.Item
+		if !auth.IsAdmin(userRoles, cfg.Auth.AdminRole) {
+			var filteredItems []items.Item
 
-		for _, item := range itemList {
-			// If allowed_roles is not set or the role check passes, include the item
-			if len(item.AllowedRoles) == 0 || auth.HasRequiredRoles(userRoles, item.AllowedRoles) {
-				filteredItems = append(filteredItems, item)
+			for _, item := range itemList {
+				// If allowed_roles is not set or the role check passes, include the item
+				if len(item.AllowedRoles) == 0 || auth.HasRequiredRoles(userRoles, item.AllowedRoles) {
+					filteredItems = append(filteredItems, item)
+				}
 			}
-		}
 
-		itemList = filteredItems
+			itemList = filteredItems
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -281,6 +294,28 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func GetAuthInfoHandler(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		return
+	}
+
+	user := auth.UserClaims{
+		Name:     session.Values["name"].(string),
+		Email:    session.Values["email"].(string),
+		Username: session.Values["username"].(string),
+		Roles:    session.Values["roles"].([]string),
+	}
+
+	jsonResponse(w, http.StatusOK, map[string]interface{}{
+		"auth_type":      authType,
+		"authenticated":  session.Values["authenticated"],
+		"admin_role":     cfg.Auth.AdminRole,
+		"session_expiry": session.Options.MaxAge,
+		"user":           user,
+	})
+}
+
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := store.Get(r, "session")
 	if err != nil {
@@ -288,12 +323,13 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session.Options.MaxAge = -1
+	session.Values = make(map[interface{}]interface{})
 	err = session.Save(r, w)
 	if err != nil {
 		return
 	}
 
-	url := auth.LogoutURL(cfg.Auth.AuthURL)
+	url := auth.LogoutURL(cfg.Auth.OIDC.AuthURL)
 
 	http.Redirect(w, r, url, http.StatusFound)
 	return
