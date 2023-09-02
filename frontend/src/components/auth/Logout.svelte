@@ -1,9 +1,10 @@
 <script lang="ts">
-    import {authState} from "../../stores/auth.js";
+    import { authState } from "../../stores/auth.js";
 
     function handleLogout() {
         authState.set(null);
-        window.location.href = '/auth/logout';
+        fetch('auth/logout')
+            .then(() => window.location.href = '/')
     }
 </script>
 

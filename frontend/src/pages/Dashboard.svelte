@@ -1,8 +1,7 @@
 <script lang="ts">
-    import {authState} from "../stores/auth";
     import Header from "../components/Header.svelte";
     import Item from "../components/Item.svelte";
-    import {blur} from "svelte/transition";
+    import { blur } from "svelte/transition";
     import AddModal from "../components/AddModal.svelte";
     import IsAdmin from "../components/auth/IsAdmin.svelte";
 

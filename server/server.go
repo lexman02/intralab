@@ -14,7 +14,9 @@ import (
 	"intralab/pkg/auth"
 	"intralab/types"
 	"log"
+	"maps"
 	"net/http"
+	"slices"
 	"time"
 
 	"intralab/pkg/items"
@@ -27,6 +29,13 @@ var authType string
 func StartServer(config *config.Config) {
 	cfg = config
 
+	findAuthType, err := auth.FindAuthType(cfg.Auth)
+	if err != nil {
+		log.Fatal("Failed to find auth type: ", err)
+	}
+
+	authType = findAuthType
+
 	sessionSecret, err := generateRandomSecret()
 	if err != nil {
 		log.Fatal("Failed to generate session secret: ", err)
@@ -34,16 +43,7 @@ func StartServer(config *config.Config) {
 
 	if cfg.App.Key == "" {
 		cfg.App.Key = sessionSecret
-		cfg.SetConfig("app.key", sessionSecret)
-	}
-
-	// Check if the middleware should use oidc or basic auth
-	if cfg.Auth.OIDC.ClientID == "" && cfg.Auth.OIDC.ClientSecret == "" {
-		log.Println("Using basic auth")
-		authType = "basic"
-	} else {
-		log.Println("Using OIDC")
-		authType = "oidc"
+		cfg.SetConfigValue("app.key", sessionSecret)
 	}
 
 	// Create a new CookieStore with the generated secret
@@ -78,7 +78,7 @@ func StartServer(config *config.Config) {
 	r.Get("/auth/callback", CallbackHandler)
 	r.Get("/auth/info", GetAuthInfoHandler)
 	r.Get("/auth/logout", LogoutHandler)
-	//r.Post("/auth/validate", LoginHandler)
+	r.Get("/auth/login", LoginHandler)
 
 	log.Println("Server started on :3000")
 	err = http.ListenAndServe(":3000", r)
@@ -107,7 +107,7 @@ func GetItemsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !auth.IsAdmin(userRoles, cfg.Auth.AdminRole) {
+		if slices.Contains(userRoles, cfg.Auth.AdminRole) {
 			var filteredItems []items.Item
 
 			for _, item := range itemList {
@@ -300,23 +300,34 @@ func GetAuthInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := auth.UserClaims{
-		Name:     session.Values["name"].(string),
-		Email:    session.Values["email"].(string),
-		Username: session.Values["username"].(string),
-		Roles:    session.Values["roles"].([]string),
-	}
-
-	jsonResponse(w, http.StatusOK, map[string]interface{}{
+	var user auth.UserClaims
+	basePayload := map[string]interface{}{
 		"auth_type":      authType,
 		"authenticated":  session.Values["authenticated"],
-		"admin_role":     cfg.Auth.AdminRole,
 		"session_expiry": session.Options.MaxAge,
-		"user":           user,
-	})
+	}
+
+	if authType == "oidc" {
+		user = auth.UserClaims{
+			Name:     session.Values["name"].(string),
+			Email:    session.Values["email"].(string),
+			Username: session.Values["username"].(string),
+			Roles:    session.Values["roles"].([]string),
+		}
+
+		maps.Copy(basePayload, map[string]interface{}{
+			"admin_role": cfg.Auth.AdminRole,
+			"user":       user,
+		})
+	}
+
+	jsonResponse(w, http.StatusOK, basePayload)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	redirectUrl := "/"
+	statusCode := http.StatusFound
+
 	session, err := store.Get(r, "session")
 	if err != nil {
 		return
@@ -329,10 +340,47 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := auth.LogoutURL(cfg.Auth.OIDC.AuthURL)
+	if authType == "oidc" {
+		redirectUrl = auth.LogoutURL(cfg.Auth.OIDC.AuthURL)
+	}
 
-	http.Redirect(w, r, url, http.StatusFound)
+	if authType == "basic" {
+		statusCode = http.StatusUnauthorized
+	}
+
+	http.Redirect(w, r, redirectUrl, statusCode)
 	return
+}
+
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		return
+	}
+
+	w.Header().Set("WWW-Authenticate", `Basic realm="Authentication required"`)
+
+	username, password, ok := r.BasicAuth()
+	fmt.Println(username, password, ok)
+	if !ok {
+		// No credentials provided, show the basic auth prompt again
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if !auth.ValidateBasicAuthCredentials(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password, username, password) {
+		// Invalid credentials, show the basic auth prompt again
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	session.Values["authenticated"] = true
+	err = session.Save(r, w)
+	if err != nil {
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func generateRandomSecret() (string, error) {

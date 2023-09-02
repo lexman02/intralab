@@ -23,7 +23,7 @@ func main() {
 	viper.WatchConfig()
 
 	// Initialize auth
-	auth.InitOIDCClient(cfg.Auth)
+	auth.InitAuth(cfg)
 
 	// Rebuild frontend (if needed?)
 	server.StartServer(cfg)

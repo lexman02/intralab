@@ -12,14 +12,16 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch authType {
 		case "oidc":
-			handleOIDCAuthentication(next, w, r)
+			handleOIDCAuthentication(w, r)
+		case "basic":
+			handleBasicAuthentication(w, r)
 		}
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-func handleOIDCAuthentication(next http.Handler, w http.ResponseWriter, r *http.Request) {
+func handleOIDCAuthentication(w http.ResponseWriter, r *http.Request) {
 	// Get the session
 	session, err := store.Get(r, "session")
 	if err != nil {
@@ -55,6 +57,37 @@ func handleOIDCAuthentication(next http.Handler, w http.ResponseWriter, r *http.
 		// Include the state in the authorization request
 		authURL := auth.GetAuthURL(state)
 		http.Redirect(w, r, authURL, http.StatusFound)
+		return
+	}
+}
+
+func handleBasicAuthentication(w http.ResponseWriter, r *http.Request) {
+	// Get the session
+	session, err := store.Get(r, "session")
+	if err != nil {
+		fmt.Println(w, "Session error", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if the session contains authentication data
+	authenticated, ok := session.Values["authenticated"].(bool)
+	if !ok || !authenticated {
+		// Set authenticated to false if it doesn't exist or is false
+		session.Options.HttpOnly = true
+		session.Values["authenticated"] = false
+		err = session.Save(r, w)
+		if err != nil {
+			fmt.Println(w, "Session error", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	authRoutes := map[string]bool{
+		"/auth/logout": true,
+	}
+
+	if _, ok := authRoutes[r.URL.Path]; ok && !authenticated {
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
 		return
 	}
 }

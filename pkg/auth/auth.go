@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 	"intralab/config"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -23,20 +25,40 @@ type UserClaims struct {
 	Roles    []string `json:"roles"`
 }
 
-func InitOIDCClient(cfg config.AuthConfig) {
-	provider, err := oidc.NewProvider(context.Background(), cfg.OIDC.AuthURL)
+func InitAuth(cfg *config.Config) {
+	authType, err := FindAuthType(cfg.Auth)
 	if err != nil {
 		panic(err)
 	}
 
-	oidcProvider = provider
+	if authType == "oidc" {
+		provider, err := oidc.NewProvider(context.Background(), cfg.Auth.OIDC.AuthURL)
+		if err != nil {
+			panic(err)
+		}
 
-	oauth2Config = oauth2.Config{
-		ClientID:     cfg.OIDC.ClientID,
-		ClientSecret: cfg.OIDC.ClientSecret,
-		Endpoint:     provider.Endpoint(),
-		RedirectURL:  cfg.OIDC.RedirectURL,
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email", "offline_access"},
+		oidcProvider = provider
+
+		oauth2Config = oauth2.Config{
+			ClientID:     cfg.Auth.OIDC.ClientID,
+			ClientSecret: cfg.Auth.OIDC.ClientSecret,
+			Endpoint:     provider.Endpoint(),
+			RedirectURL:  cfg.Auth.OIDC.RedirectURL,
+			Scopes:       []string{oidc.ScopeOpenID, "profile", "email", "offline_access"},
+		}
+	}
+
+	if authType == "basic" {
+		// Check if the password is already hashed (e.g., bcrypt)
+		if !strings.HasPrefix(cfg.Auth.BasicAuth.Password, "$2a$") {
+			// The password is not hashed, so hash it securely using bcrypt
+			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(cfg.Auth.BasicAuth.Password), bcrypt.DefaultCost)
+			if err != nil {
+				panic(err)
+			}
+			// Store the hashed password in your configuration
+			cfg.SetConfigValue("auth.basic_auth.password", string(hashedPassword))
+		}
 	}
 }
 
@@ -153,21 +175,28 @@ func HasRequiredRoles(roles []string, allowedRoles []string) bool {
 	return false
 }
 
-func IsAdmin(roles []string, adminRole string) bool {
-	for _, role := range roles {
-		if role == adminRole {
-			return true
-		}
-	}
-	return false
-}
-
 func GetAuthURL(state string) string {
 	return oauth2Config.AuthCodeURL(state)
 }
 
 func LogoutURL(url string) string {
 	return url + "/protocol/openid-connect/logout"
+}
+
+func ValidateBasicAuthCredentials(cfgUsername, cfgPassword, username, password string) bool {
+	return cfgUsername == username && bcrypt.CompareHashAndPassword([]byte(cfgPassword), []byte(password)) == nil
+}
+
+func FindAuthType(cfg config.AuthConfig) (string, error) {
+	if cfg.OIDC.AuthURL != "" && cfg.OIDC.ClientID != "" && cfg.OIDC.ClientSecret != "" {
+		return "oidc", nil
+	}
+
+	if cfg.BasicAuth.Username != "" && cfg.BasicAuth.Password != "" {
+		return "basic", nil
+	}
+
+	return "", errors.New("invalid auth configuration")
 }
 
 func expireCookie(name string, w http.ResponseWriter) {

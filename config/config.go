@@ -96,7 +96,7 @@ func ImportConfig(newConfig Config) {
 	}
 }
 
-func (*Config) SetConfig(key string, value interface{}) {
+func (*Config) SetConfigValue(key string, value interface{}) {
 	viper.Set(key, value)
 	err := viper.WriteConfig()
 	if err != nil {

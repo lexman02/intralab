@@ -8,11 +8,11 @@ interface User {
 }
 
 interface AuthState {
-    type: string;
+    auth_type: string;
     authenticated: boolean;
-    admin_role: string;
     session_expiry: number;
-    user: User;
+    admin_role?: string;
+    user?: User;
 }
 
 export const authState = writable<AuthState | null>(null);
