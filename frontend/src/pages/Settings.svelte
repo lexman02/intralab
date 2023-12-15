@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
+    import { isAdmin } from "../stores/auth";
     import Header from "../components/Header.svelte";
     import Tabs from "../components/Tabs.svelte";
-    import {parseJSON} from "../utils.ts";
-    import config from "../../../config.json";
+    import { parseJSON } from "../utils.ts";
     import Modal from "../components/Modal.svelte";
     import IsAdmin from "../components/auth/IsAdmin.svelte";
 
@@ -31,18 +31,46 @@
         // }
     ];
 
-    let activeImportTab;
-    let activeTicketingTab = setActiveTicketingTab();
     let showConfirmation = false;
+    let activeImportTab = 1;
+    let activeTicketingTab = 1;
+    let config;
     let disabled;
     let input;
     let confirmed = false;
 
+    function loadConfig() {
+        fetch('/api/settings')
+            .then(response => response.json())
+            .then(data => {
+                config = data;
+                activeTicketingTab = setActiveTicketingTab();
+            });
+    }
+
+    async function submitConfig(section, value) {
+        await fetch('/api/settings/' + section, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(value)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            });
+    }
+
+    if ($isAdmin) {
+        loadConfig()
+    }
+
     function setActiveTicketingTab() {
-        switch (config.ticketing.Platform) {
-            case "osTicket":
+        switch (config.ticketing.platform) {
+            case "osticket":
                 return 2;
-            case "Zammad":
+            case "zammad":
                 return 3;
             default:
                 return 1;
@@ -110,7 +138,6 @@
             to Keycloak</a>
     </div>
     <!--{{&#45;&#45;        <hr class="border-2 rounded-2xl border-gray-600/30">&#45;&#45;}}-->
-    <!--    @if(Auth::hasRole(config('sync.admin_role'), 'master-realm'))-->
     <IsAdmin>
         <Header title="Admin Settings"/>
 
@@ -233,11 +260,12 @@
                 {#if activeTicketingTab !== 1}
                     <div class="space-y-3">
                         <hr class="border-white/10 border rounded-3xl">
-                        <form id="ticketing" class="flex flex-col items-stretch space-y-2">
+                        <form on:submit|preventDefault={submitConfig("ticketing", config.ticketing)} id="ticketing"
+                              class="flex flex-col items-stretch space-y-2">
                             <div class="text-white/60 font-medium">
                                 <label for="description">Description placeholder message</label>
                                 <!--                        @error('description') <span class="text-red-700 text-sm">{{ $message }}</span> @enderror-->
-                                <textarea bind:value={config.ticketing.SubjectPlaceholder}
+                                <textarea bind:value={config.ticketing.subject_placeholder}
                                           id="description"
                                           class="bg-gray-700/50 rounded-lg text-sm h-24 w-full mt-1 text-white/75 caret-white p-2.5 resize-none border-0 ring-1 ring-slate-900/10 focus:outline-none placeholder:font-medium placeholder:text-white/20"></textarea>
                             </div>
@@ -248,7 +276,7 @@
                                         <!--                                @error('osticket_base_url')-->
                                         <!--                                <span class="text-red-700 text-sm">{{ $message }}</span> @enderror-->
                                         <input form="ticketing"
-                                               name="osticket_base_url"
+                                               bind:value={config.ticketing.osticket.base_url}
                                                id="osticket_base_url"
                                                class="bg-gray-700/50 rounded-lg text-sm h-full w-full mt-1 text-white/75 caret-white p-2.5 resize-none border-0 ring-1 ring-slate-900/10 focus:outline-none placeholder:font-medium placeholder:text-white/20">
                                         <!--                                       placeholder="{{ config('ticketing.osticket_base_url') }}"-->
@@ -259,7 +287,7 @@
                                         <!--                                @error('osticket_api_key')-->
                                         <!--                                <span class="text-red-700 text-sm">{{ $message }}</span> @enderror-->
                                         <input form="ticketing"
-                                               name="osticket_api_key"
+                                               bind:value={config.ticketing.osticket.api_key}
                                                id="osticket_api_key"
                                                class="bg-gray-700/50 rounded-lg text-sm h-full w-full mt-1 text-white/75 caret-white p-2.5 resize-none border-0 ring-1 ring-slate-900/10 focus:outline-none placeholder:font-medium placeholder:text-white/20">
                                         <!--                                       placeholder="{{ config('ticketing.osticket_api_key') }}"-->

@@ -12,6 +12,7 @@ import (
 	"intralab/config"
 	ui "intralab/frontend"
 	"intralab/pkg/auth"
+	"intralab/pkg/ticketing"
 	"intralab/types"
 	"log"
 	"maps"
@@ -73,6 +74,9 @@ func StartServer(config *config.Config) {
 	r.Post("/api/items", PostItemsHandler)
 	r.Delete("/api/items", DeleteItemsHandler)
 	r.Put("/api/items", UpdateItemsHandler)
+	r.Post("/api/ticket", PostTicketHandler)
+	r.Get("/api/settings", GetSettingsHandler)
+	r.Post("/api/settings/{section}", PostSettingsHandler)
 	r.Get("/api/config", ExportConfigHandler)
 	r.Post("/api/config", ImportConfigHandler)
 	r.Get("/auth/callback", CallbackHandler)
@@ -186,6 +190,50 @@ func DeleteItemsHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, http.StatusOK, map[string]string{"success": "Items deleted"})
 }
 
+func PostTicketHandler(w http.ResponseWriter, r *http.Request) {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		http.Error(w, "Session error", http.StatusInternalServerError)
+		return
+	}
+
+	name := session.Values["name"].(string)
+	email := session.Values["email"].(string)
+
+	err = ticketing.OSTicket(cfg.Ticketing, name, email, "test", "test")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}
+
+func GetSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	response := map[string]interface{}{
+		"ticketing": cfg.Ticketing,
+	}
+
+	jsonResponse(w, http.StatusOK, response)
+}
+
+func PostSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	section := chi.URLParam(r, "section")
+
+	switch section {
+	case "ticketing":
+		var ticketing config.TicketingConfig
+		err := json.NewDecoder(r.Body).Decode(&ticketing)
+		if err != nil {
+			jsonError(w, http.StatusUnprocessableEntity, Error{DecodeError, err.Error()})
+			return
+		}
+
+		cfg.SetConfigValue("ticketing", ticketing)
+	}
+
+	log.Println("Settings updated")
+	jsonResponse(w, http.StatusOK, map[string]string{"success": "Settings updated"})
+}
+
 func ExportConfigHandler(w http.ResponseWriter, r *http.Request) {
 	getItems, dbErr := items.GetItems()
 	if dbErr != nil {
@@ -224,14 +272,20 @@ func ImportConfigHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	config.ImportConfig(intralab.Config)
-	purgeErr := items.PurgeItems()
-	if purgeErr != nil {
+	err = items.PurgeItems()
+	if err != nil {
 		return
 	}
 
-	dbErr := items.StoreItems(intralab.Items)
-	if dbErr != nil {
-		jsonError(w, http.StatusInternalServerError, Error{GeneralError, dbErr.Error()})
+	err = items.StoreItems(intralab.Items)
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, Error{GeneralError, err.Error()})
+		return
+	}
+
+	err = expireSession(w, r)
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, Error{GeneralError, err.Error()})
 		return
 	}
 
@@ -328,14 +382,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	redirectUrl := "/"
 	statusCode := http.StatusFound
 
-	session, err := store.Get(r, "session")
-	if err != nil {
-		return
-	}
-
-	session.Options.MaxAge = -1
-	session.Values = make(map[interface{}]interface{})
-	err = session.Save(r, w)
+	err := expireSession(w, r)
 	if err != nil {
 		return
 	}
@@ -350,6 +397,22 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, redirectUrl, statusCode)
 	return
+}
+
+func expireSession(w http.ResponseWriter, r *http.Request) error {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		return err
+	}
+
+	session.Options.MaxAge = -1
+	session.Values = make(map[interface{}]interface{})
+	err = session.Save(r, w)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
