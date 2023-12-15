@@ -191,16 +191,28 @@ func DeleteItemsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostTicketHandler(w http.ResponseWriter, r *http.Request) {
+	var ticket ticketing.Ticket
+
+	if authType == "basic" {
+		jsonError(w, http.StatusUnauthorized, Error{GeneralError, "Ticketing is not available with basic auth"})
+		return
+	}
+
 	session, err := store.Get(r, "session")
 	if err != nil {
 		http.Error(w, "Session error", http.StatusInternalServerError)
 		return
 	}
 
-	name := session.Values["name"].(string)
-	email := session.Values["email"].(string)
+	ticket.Name = session.Values["name"].(string)
+	ticket.Email = session.Values["email"].(string)
 
-	err = ticketing.OSTicket(cfg.Ticketing, name, email, "test", "test")
+	err = json.NewDecoder(r.Body).Decode(&ticket)
+	if err != nil {
+		jsonError(w, http.StatusUnprocessableEntity, Error{DecodeError, err.Error()})
+	}
+
+	err = ticketing.OSTicket(cfg.Ticketing, ticket)
 	if err != nil {
 		fmt.Println(err)
 		return
