@@ -1,4 +1,4 @@
-import {get, writable} from "svelte/store";
+import { get, writable } from "svelte/store";
 
 interface User {
     name: string;
@@ -16,6 +16,7 @@ interface AuthState {
 }
 
 export const authState = writable<AuthState | null>(null);
+export const isAdmin = writable<boolean>(false);
 
 const fetchAuthStateData = async () => {
     try {

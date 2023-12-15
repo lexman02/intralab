@@ -1,18 +1,16 @@
 <script lang="ts">
-    import { authState } from "../../stores/auth";
-
-    export let isAdmin = false;
+    import { authState, isAdmin } from "../../stores/auth";
 
     function checkPermissions() {
         if ($authState.auth_type === 'oidc') {
             if ($authState.user.roles.includes($authState.admin_role)) {
-                isAdmin = true;
+                isAdmin.set(true);
                 return true;
             }
         }
 
         if ($authState.auth_type === 'basic' && $authState.authenticated) {
-            isAdmin = true;
+            isAdmin.set(true);
             return true;
         }
 
