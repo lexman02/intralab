@@ -20,6 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to load config: ", err)
 	}
+
 	viper.WatchConfig()
 
 	// Initialize auth

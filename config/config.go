@@ -12,22 +12,36 @@ type Config struct {
 }
 
 func LoadConfig(configFile string) (*Config, error) {
-	var config *Config
+	v := viper.New()
+	v.SetConfigFile(configFile)
+	v.SetConfigType("json")
 
-	viper.SetConfigFile(configFile)
-	viper.SetConfigType("json")
+	v.SetDefault("app.name", "Intralab")
+	v.SetDefault("app.env", "production")
+	v.SetDefault("app.url", "http://0.0.0.0")
+	v.SetDefault("app.port", 3000)
+	v.SetDefault("app.debug", false)
+	v.SetDefault("auth.basic_auth.username", "admin")
 
-	err := viper.ReadInConfig()
+	err := v.ReadInConfig()
+	if err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			err = v.SafeWriteConfigAs(configFile)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	var config Config
+	err = v.Unmarshal(&config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		return nil, err
-	}
-
-	return config, nil
+	return &config, nil
 }
 
 func ImportConfig(newConfig Config) {

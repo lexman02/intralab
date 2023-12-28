@@ -1,7 +1,5 @@
 package config
 
-import "github.com/spf13/viper"
-
 type AppConfig struct {
 	Name  string `mapstructure:"name"`
 	Env   string `mapstructure:"env"`
@@ -21,10 +19,4 @@ func init() {
 		"app.debug": "APP_DEBUG",
 	}
 	setEnvBindings(appEnvMappings)
-
-	viper.SetDefault("app.name", "Intralab")
-	viper.SetDefault("app.env", "production")
-	viper.SetDefault("app.url", "http://0.0.0.0")
-	viper.SetDefault("app.port", 3000)
-	viper.SetDefault("app.debug", false)
 }
