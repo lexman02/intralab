@@ -22,4 +22,4 @@ FROM alpine:3.14
 WORKDIR /app
 COPY --from=backend-builder /app/backend/intralab .
 EXPOSE 3000
-CMD ["./intralab"]
+CMD ["./app/intralab"]
