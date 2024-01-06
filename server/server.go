@@ -67,7 +67,8 @@ func StartServer(config *config.Config) {
 	}))
 
 	// Serve static files
-	r.Mount("/", ui.Handler())
+	//r.Mount("/", ui.Handler())
+	r.Handle("/*", ui.Handler())
 
 	// Register routes
 	r.Get("/api/items", GetItemsHandler)
