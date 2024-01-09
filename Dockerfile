@@ -13,13 +13,14 @@ WORKDIR /app/backend
 COPY . .
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 COPY --from=frontend-builder /app/frontend/embed.go ./frontend/embed.go
-RUN go mod tidy \
-    && go mod download
-RUN CGO_ENABLED=0 GOOS=linux go build -o intralab .
+RUN go get
+RUN go build -o intralab .
 
 # Final image
 FROM alpine:3.14
-WORKDIR /app
+WORKDIR /intralab
 COPY --from=backend-builder /app/backend/intralab .
+RUN mkdir data
+VOLUME /data
 EXPOSE 3000
-CMD ["./app/intralab"]
+CMD ["/app/intralab"]

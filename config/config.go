@@ -15,6 +15,8 @@ func LoadConfig(configFile string) (*Config, error) {
 	v := viper.New()
 	v.SetConfigFile(configFile)
 	v.SetConfigType("json")
+	v.AddConfigPath("./data")
+	v.AddConfigPath(".")
 
 	v.SetDefault("app.name", "Intralab")
 	v.SetDefault("app.env", "production")
