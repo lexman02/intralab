@@ -37,7 +37,7 @@
     }
 
     function loadItems() {
-        fetch("http://localhost:3000/api/items")
+        fetch("/api/items")
             .then(res => res.json())
             .then(data => {
                 items = data;
