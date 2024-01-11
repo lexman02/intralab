@@ -23,4 +23,4 @@ COPY --from=backend-builder /app/backend/intralab .
 RUN mkdir data
 VOLUME /data
 EXPOSE 3000
-CMD ["/app/intralab"]
+CMD ["/intralab/intralab"]
