@@ -11,12 +11,19 @@ type Config struct {
 	Ticketing TicketingConfig `mapstructure:"ticketing"`
 }
 
-func LoadConfig(configFile string) (*Config, error) {
-	v := viper.New()
-	v.SetConfigFile(configFile)
-	v.SetConfigType("json")
+var v *viper.Viper
+
+func init() {
+	v = viper.New()
+	initAppEnv()
+	initAuthEnv()
+}
+
+func LoadConfig() (*Config, error) {
 	v.AddConfigPath("./data")
 	v.AddConfigPath(".")
+	v.SetConfigType("json")
+	v.SetConfigName("config")
 
 	v.SetDefault("app.name", "Intralab")
 	v.SetDefault("app.env", "production")
@@ -28,7 +35,12 @@ func LoadConfig(configFile string) (*Config, error) {
 	err := v.ReadInConfig()
 	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			err = v.SafeWriteConfigAs(configFile)
+			if v.Get("app.env") == "production" {
+				err = v.WriteConfigAs("./data/config.json")
+			} else {
+				err = v.WriteConfigAs("./config.json")
+			}
+
 			if err != nil {
 				return nil, err
 			}
@@ -43,6 +55,7 @@ func LoadConfig(configFile string) (*Config, error) {
 		return nil, err
 	}
 
+	v.WatchConfig()
 	return &config, nil
 }
 
@@ -57,8 +70,8 @@ func ImportConfig(newConfig Config) {
 }
 
 func (*Config) SetConfigValue(key string, value interface{}) {
-	viper.Set(key, value)
-	err := viper.WriteConfig()
+	v.Set(key, value)
+	err := v.WriteConfig()
 	if err != nil {
 		return
 	}
@@ -66,7 +79,7 @@ func (*Config) SetConfigValue(key string, value interface{}) {
 
 func setEnvBindings(envMappings map[string]string) {
 	for configKey, envVarName := range envMappings {
-		err := viper.BindEnv(configKey, envVarName)
+		err := v.BindEnv(configKey, envVarName)
 		if err != nil {
 			return
 		}

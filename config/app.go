@@ -9,7 +9,7 @@ type AppConfig struct {
 	Debug bool   `mapstructure:"debug"`
 }
 
-func init() {
+func initAppEnv() {
 	appEnvMappings := map[string]string{
 		"app.name":  "APP_NAME",
 		"app.env":   "APP_ENV",

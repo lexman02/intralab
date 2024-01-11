@@ -19,7 +19,7 @@ type OIDCConfig struct {
 	Scopes       []string `mapstructure:"scopes"`
 }
 
-func init() {
+func initAuthEnv() {
 	authEnvMappings := map[string]string{
 		"auth.basic_auth.username": "AUTH_BASIC_AUTH_USERNAME",
 		"auth.basic_auth.password": "AUTH_BASIC_AUTH_PASSWORD",

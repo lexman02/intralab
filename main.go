@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/spf13/viper"
 	"intralab/config"
 	"intralab/db"
 	"intralab/pkg/auth"
@@ -16,12 +15,12 @@ func main() {
 	}
 	defer db.DB.Close() // Close the database when the program exits
 
-	cfg, err := config.LoadConfig("config.json")
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal("Failed to load config: ", err)
 	}
 
-	viper.WatchConfig()
+	//viper.WatchConfig()
 
 	// Initialize auth
 	auth.InitAuth(cfg)
