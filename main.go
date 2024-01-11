@@ -20,8 +20,6 @@ func main() {
 		log.Fatal("Failed to load config: ", err)
 	}
 
-	//viper.WatchConfig()
-
 	// Initialize auth
 	auth.InitAuth(cfg)
 
